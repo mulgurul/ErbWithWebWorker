@@ -1,4 +1,4 @@
-//import dgram from 'dgram';
+import dgram from 'dgram';
 
 const ctx: Worker = self as any;
 
@@ -17,47 +17,41 @@ ctx.onmessage = (event) => {
       });
     }, data.intervalMs);
 
-    // createSocket();
+    createSocket(data.udpPort);
     webWorkerInitialized = true;
   }
 }
 
 let udpSocket: any = null;
 
-
-
-function createSocket() {
+function createSocket(portNumber: number) {
   console.log('UDP Socket starting at port 2000');
-  // udpSocket = dgram.createSocket('udp4');
-//       // On socket error
-//       udpSocket.on('error', (err: any) => {
-//             console.log(`UDP server error:\n${err}`);
-//         });
+  udpSocket = dgram.createSocket('udp4');
+  // On socket error
+  udpSocket.on('error', (err: any) => {
+      console.log(`UDP server error:\n${err}`);
+  });
 
-//         udpSocket.on('message', (data: any, rinfo: any) => {
-//               console.log("Got UDP data", data);
-//               postMessage(data)
-//               //     type: 'udp',
-//               //     data: data,
-//               //     time: new Date().getTime(),
-//               // });
-//           });
+  udpSocket.on('message', (data: any, rinfo: any) => {
+        console.log("Got UDP data", data);
+        ctx.postMessage({
+          type: 'udpdata',
+          data: data,
+        });
+  });
 
-//           // On start listening
-//           udpSocket.on('listening', () => {
-//             var address = udpSocket.address();
-//             //console.log('UDP server listening ' + address.address + ':' + address.port);
-//             console.log('UDP server listening ' + address.address + ':' + address.port);
+  // On start listening
+  udpSocket.on('listening', () => {
+    var address = udpSocket.address();
+    console.log('UDP server listening ' + address.address + ':' + address.port);
+  });
 
-//     //udpSocket.setBroadcast(true);
-//     });
+  // On socket close
+  udpSocket.on('close', () => {
+      console.log('UDP Connection closed');
+  });
 
-//     // On socket close
-//     udpSocket.on('close', () => {
-//         console.log('UDP Connection closed');
-//     });
-
-//     udpSocket.bind(2000);
+  udpSocket.bind(2000);
 
   console.log('UDP Socket started at port 2000');
 }

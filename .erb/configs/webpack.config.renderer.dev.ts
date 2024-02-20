@@ -10,6 +10,8 @@ import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
 import baseConfig from './webpack.config.base';
 import webpackPaths from './webpack.paths';
 import checkNodeEnv from '../scripts/check-node-env';
+import NodeTargetPlugin from 'webpack/lib/node/NodeTargetPlugin';
+import WorkerPlugin from 'worker-plugin';
 
 // When an ESLint server is running, we can't set the NODE_ENV so we'll check if it's
 // at the dev webpack config is not accidentally run in a production environment
@@ -130,6 +132,7 @@ const configuration: webpack.Configuration = {
         ]),
 
     new webpack.NoEmitOnErrorsPlugin(),
+    new NodeTargetPlugin(),
 
     /**
      * Create global constants which can be configured at compile time.
@@ -217,5 +220,10 @@ const configuration: webpack.Configuration = {
     },
   },
 };
+
+let workerPlugin = configuration.plugins?.find(p => p instanceof WorkerPlugin);
+  if (workerPlugin) {
+    workerPlugin.options.plugins.push(new NodeTargetPlugin());
+  }
 
 export default merge(baseConfig, configuration);
