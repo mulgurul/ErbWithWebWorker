@@ -4,27 +4,47 @@ import './App.css';
 import webworkerURL from './webworker.worker';
 //import webworkerURL from './webworker.worker.ts';
 import { useEffect, useState } from 'react';
+import { WebWorkerLibTs } from './webworker/workerclass';
 
 function Hello() {
-  const [webworker, setWebworker] = useState<Worker | undefined>();
+  const [webworker, setWebworker] = useState<WebWorkerLibTs | undefined>();
   const [webworkerTime, setWebworkerTime] = useState<number | undefined>();
+  const [udpDataReceived, setUdpDataReceived] = useState<string[]>([]);
 
   useEffect(() => {
-    // Cant do it this way because of commonjs modules
-    //const worker = new Worker(new URL('./webworker.worker.ts', import.meta.url));
-    //const worker = new Worker(webworkerURL);
-    //const worker = new Worker(new URL(webworkerURL.toString(), 'http://localhost:1212/'));
-    const worker = new Worker(new URL('./webworker.worker.ts', 'http://localhost:1212/'));
-    console.log('worker', worker);
-    worker.onmessage = (event) => {
-      setWebworkerTime(event.data);
-    }
+    let worker = new WebWorkerLibTs();
+    //jsWorker.sendMessage();
     setWebworker(worker);
 
+    // App is closing/unmount, unsubscribe to everything
     return () => {
-      worker.terminate();
+      webworker?.terminate();
+      console.log('App is closing, react unmounting');
     }
   }, []);
+
+  useEffect(() => {
+    if (webworker === undefined) return;
+
+    webworker.onMessage( (e: MessageEvent<any>) => {
+      const { type, data } = e.data;
+      // console.log(`Received worker message  of type ${type} from ${fromIP}`, data, );
+
+      if(type === 'time') {
+        setWebworkerTime(data)
+      }
+      else if(type === 'udpdata') {
+      }
+    });
+
+    webworker.postMessage({
+      cmd: 'init',
+      data: {
+        intervalMs: 1000,
+        udpPort: 2000
+      }
+    });
+  }, [webworker]);
 
   return (
     <div>
@@ -33,8 +53,7 @@ function Hello() {
       </div>
       <h1>electron-react-boilerplate with a webworker</h1>
       <div className="Hello">
-        Message with time received from webworker at: <span id="message">{webworkerTime ? new Date(webworkerTime ?? 0).toLocaleTimeString() : 'Not received'}</span>
-
+        Message received from webworker, time data was:&nbsp;<span id="message">{webworkerTime ? new Date(webworkerTime ?? 0).toLocaleTimeString() : 'Not received'}</span>
       </div>
     </div>
   );

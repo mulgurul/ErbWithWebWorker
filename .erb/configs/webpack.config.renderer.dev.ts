@@ -63,6 +63,10 @@ const configuration: webpack.Configuration = {
   module: {
     rules: [
       {
+        test: /worker\.ts$/,
+        loader: 'ts-loader'
+      },
+      {
         test: /\.s?(c|a)ss$/,
         use: [
           'style-loader',
@@ -163,6 +167,10 @@ const configuration: webpack.Configuration = {
       nodeModules: webpackPaths.appNodeModulesPath,
     }),
   ],
+
+  stats: {
+    children: true,
+  },
 
   node: {
     __dirname: false,
